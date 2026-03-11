@@ -4,268 +4,186 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Aura Fit - Elite</title>
-    
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#121212">
-
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
-        :root {
-            --primary: #00ff88;
-            --bg: #121212;
-            --card: #1e1e1e;
-            --text: #ffffff;
-            --secondary: #2a2a2a;
-        }
+        :root { --primary: #00ff88; --bg: #121212; --card: #1e1e1e; --text: #fff; --secondary: #2a2a2a; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 20px; }
+        .container { padding: 15px; }
+        .card { background: var(--card); border-radius: 16px; padding: 20px; margin-bottom: 15px; }
+        
+        label { display: block; font-size: 0.75rem; color: var(--primary); margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        input, select { background: var(--secondary); border: 1px solid #333; color: white; padding: 14px; border-radius: 10px; width: 100%; box-sizing: border-box; margin-bottom: 10px; outline: none; }
+        
+        .unit-toggle { display: flex; background: var(--secondary); border-radius: 10px; margin-bottom: 15px; padding: 5px; }
+        .unit-toggle button { flex: 1; border: none; background: none; color: #888; padding: 10px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .unit-toggle button.active { background: var(--primary); color: #000; }
 
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding-bottom: 90px;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+        .warmup-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; padding: 5px; }
+        .warmup-row input { width: auto; margin: 0; }
 
-        header {
-            padding: 25px 20px;
-            text-align: left;
-            background: linear-gradient(180deg, #1a1a1a 0%, var(--bg) 100%);
-        }
-
-        header h1 { margin: 0; font-size: 1.8rem; letter-spacing: -1px; }
-        header span { color: var(--primary); }
-
-        .container { padding: 0 15px; }
-
-        .card {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        label { 
-            display: block; 
-            font-size: 0.75rem; 
-            text-transform: uppercase; 
-            color: var(--primary); 
-            margin-bottom: 8px; 
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-
-        input, select {
-            background: var(--secondary);
-            border: 1px solid #333;
-            color: white;
-            padding: 14px;
-            border-radius: 10px;
-            width: 100%;
-            box-sizing: border-box;
-            font-size: 1rem;
-            margin-bottom: 12px;
-            outline: none;
-        }
-
-        input:focus { border-color: var(--primary); }
-
-        .btn-main {
-            background: var(--primary);
-            color: #000;
-            border: none;
-            padding: 16px;
-            border-radius: 12px;
-            width: 100%;
-            font-weight: 900;
-            font-size: 1rem;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-main:active { transform: scale(0.96); }
-
-        .chart-area {
-            height: 250px;
-            margin-top: 10px;
-        }
-
-        nav {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: rgba(30, 30, 30, 0.95);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-around;
-            padding: 15px 0;
-            border-top: 1px solid #333;
-            z-index: 100;
-        }
-
-        .nav-item { color: #666; font-size: 0.7rem; text-align: center; font-weight: bold; }
-        .nav-item.active { color: var(--primary); }
+        .btn-main { background: var(--primary); color: #000; border: none; padding: 16px; border-radius: 12px; width: 100%; font-weight: 900; text-transform: uppercase; cursor: pointer; }
+        
+        /* Lista de Histórico */
+        .history-item { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 12px; border-radius: 8px; margin-top: 5px; font-size: 0.9rem; }
+        .btn-del { background: #ff4444; color: white; border: none; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-weight: bold; }
+        
+        .last-log { font-size: 0.85rem; color: #888; margin-bottom: 10px; }
+        .hidden { display: none; }
+        .chart-area { height: 200px; }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>Aura<span>Fit</span></h1>
-    <p style="color:#666; margin: 5px 0 0; font-size: 0.9rem;">Seu progresso offline.</p>
-</header>
-
 <div class="container">
     <div class="card">
-        <label>Análise de Evolução</label>
-        <select id="filterSelect" onchange="updateChartData()">
-            <option value="">Nenhum exercício salvo</option>
-        </select>
-        <div class="chart-area">
-            <canvas id="evolutionChart"></canvas>
-        </div>
+        <label>Evolução de Carga</label>
+        <select id="filterSelect" onchange="updateChartData()"></select>
+        <div class="chart-area"><canvas id="evolutionChart"></canvas></div>
     </div>
 
     <div class="card">
-        <label>Novo Registro de Treino</label>
-        <input type="text" id="exName" placeholder="Ex: Supino Reto, Agachamento..." list="exercisesList">
-        <datalist id="exercisesList"></datalist>
+        <label>Registrar Série</label>
+        <input type="text" id="exName" placeholder="EX: AGACHAMENTO" oninput="showLastLog()">
+        <div id="lastLogInfo" class="last-log"></div>
+        
+        <div class="unit-toggle">
+            <button id="btnKg" class="active" onclick="setUnit('kg')">KG</button>
+            <button id="btnPlaca" onclick="setUnit('placa')">PLACAS</button>
+        </div>
 
-        <div style="display: flex; gap: 10px;">
-            <div style="flex: 1;">
-                <label>Carga (kg)</label>
-                <input type="number" id="exWeight" placeholder="00">
-            </div>
-            <div style="flex: 1;">
-                <label>Repetições</label>
-                <input type="number" id="exReps" placeholder="00">
+        <div id="sectionKg">
+            <input type="number" id="exWeight" placeholder="Peso (kg)">
+        </div>
+
+        <div id="sectionPlaca" class="hidden">
+            <div style="display: flex; gap: 10px;">
+                <input type="number" id="numPlacas" placeholder="Placas">
+                <input type="number" id="kgPorPlaca" value="5">
             </div>
         </div>
-        <button class="btn-main" onclick="saveExercise()">Salvar Treino</button>
+
+        <input type="number" id="exReps" placeholder="Repetições">
+
+        <div class="warmup-row">
+            <input type="checkbox" id="isWarmup">
+            <span style="font-size: 0.8rem; color: #666">Aquecimento (não vai para o gráfico)</span>
+        </div>
+        
+        <button class="btn-main" onclick="saveExercise()">Salvar Registro</button>
+    </div>
+
+    <div class="card">
+        <label>Histórico Recente</label>
+        <div id="historyList"></div>
     </div>
 </div>
 
-<nav>
-    <div class="nav-item active">📈 PROGRESSO</div>
-    <div class="nav-item">🏋️ TREINOS</div>
-    <div class="nav-item">⚙️ AJUSTES</div>
-</nav>
-
 <script>
-    let db;
-    let myChart;
+    let db; let myChart; let currentUnit = 'kg';
 
-    // 1. Inicializar Banco de Dados IndexedDB
-    const request = indexedDB.open("AuraFitProDB", 1);
-    
+    function setUnit(unit) {
+        currentUnit = unit;
+        document.getElementById('btnKg').classList.toggle('active', unit === 'kg');
+        document.getElementById('btnPlaca').classList.toggle('active', unit === 'placa');
+        document.getElementById('sectionKg').classList.toggle('hidden', unit === 'placa');
+        document.getElementById('sectionPlaca').classList.toggle('hidden', unit === 'kg');
+    }
+
+    const request = indexedDB.open("AuraFitEliteDB", 3);
     request.onupgradeneeded = (e) => {
         db = e.target.result;
-        db.createObjectStore("logs", { keyPath: "id", autoIncrement: true });
+        if (!db.objectStoreNames.contains("logs")) {
+            db.createObjectStore("logs", { keyPath: "id", autoIncrement: true });
+        }
     };
+    request.onsuccess = (e) => { db = e.target.result; initChart(); refreshUI(); };
 
-    request.onsuccess = (e) => {
-        db = e.target.result;
-        initChart();
-        refreshUI();
-    };
-
-    // 2. Configurar o Gráfico (Chart.js)
     function initChart() {
         const ctx = document.getElementById('evolutionChart').getContext('2d');
         myChart = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Carga',
-                    data: [],
-                    borderColor: '#00ff88',
-                    backgroundColor: 'rgba(0, 255, 136, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#00ff88'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { grid: { color: '#333' }, ticks: { color: '#888' } },
-                    x: { grid: { display: false }, ticks: { color: '#888' } }
-                },
-                plugins: { legend: { display: false } }
-            }
+            data: { labels: [], datasets: [{ label: 'kg', data: [], borderColor: '#00ff88', tension: 0.4, fill: true, backgroundColor: 'rgba(0,255,136,0.1)' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
     }
 
-    // 3. Salvar Exercício
     function saveExercise() {
         const name = document.getElementById('exName').value.trim().toUpperCase();
-        const weight = parseFloat(document.getElementById('exWeight').value);
-        const reps = parseInt(document.getElementById('exReps').value);
+        const reps = document.getElementById('exReps').value;
+        const isWarmup = document.getElementById('isWarmup').checked;
+        let weight = (currentUnit === 'kg') ? 
+            parseFloat(document.getElementById('exWeight').value) : 
+            parseFloat(document.getElementById('numPlacas').value) * parseFloat(document.getElementById('kgPorPlaca').value);
 
-        if (!name || !weight) return;
+        if (!name || isNaN(weight)) return;
 
         const transaction = db.transaction(["logs"], "readwrite");
-        const entry = {
-            nome: name,
-            peso: weight,
-            reps: reps,
+        transaction.objectStore("logs").add({
+            nome: name, peso: weight, reps: reps, warmup: isWarmup,
             data: new Date().toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'})
-        };
-
-        transaction.objectStore("logs").add(entry);
+        });
 
         transaction.oncomplete = () => {
             document.getElementById('exWeight').value = '';
-            document.getElementById('exReps').value = '';
+            document.getElementById('isWarmup').checked = false;
             refreshUI(name);
         };
     }
 
-    // 4. Atualizar Filtros e Gráfico
-    function refreshUI(selectedName = null) {
+    function refreshUI(selected) {
         const store = db.transaction("logs").objectStore("logs");
         store.getAll().onsuccess = (e) => {
-            const todos = e.target.result;
-            const nomes = [...new Set(todos.map(t => t.nome))];
-            
-            // Atualiza o Select e o Datalist (autocomplete)
+            const logs = e.target.result;
+            const nomes = [...new Set(logs.map(t => t.nome))];
             const select = document.getElementById('filterSelect');
-            const datalist = document.getElementById('exercisesList');
+            select.innerHTML = nomes.map(n => `<option value="${n}">${n}</option>`).join('');
+            if(selected) select.value = selected;
             
-            if(nomes.length > 0) {
-                select.innerHTML = nomes.map(n => `<option value="${n}">${n}</option>`).join('');
-                datalist.innerHTML = nomes.map(n => `<option value="${n}">`).join('');
-                
-                if (selectedName) select.value = selectedName;
-                updateChartData();
-            }
+            updateChartData();
+            renderHistory(logs);
         };
     }
 
-    // 5. Filtrar dados para o Gráfico
+    function renderHistory(logs) {
+        const historyList = document.getElementById('historyList');
+        const ultimos = logs.slice(-5).reverse();
+        historyList.innerHTML = ultimos.map(log => `
+            <div class="history-item">
+                <span><b>${log.nome}</b>: ${log.peso}kg x ${log.reps}</span>
+                <button class="btn-del" onclick="deleteLog(${log.id})">X</button>
+            </div>
+        `).join('');
+    }
+
+    function deleteLog(id) {
+        if(confirm("Apagar este registro?")) {
+            const transaction = db.transaction(["logs"], "readwrite");
+            transaction.objectStore("logs").delete(id);
+            transaction.oncomplete = () => refreshUI();
+        }
+    }
+
     function updateChartData() {
         const filter = document.getElementById('filterSelect').value;
         const store = db.transaction("logs").objectStore("logs");
-        
         store.getAll().onsuccess = (e) => {
-            const data = e.target.result.filter(t => t.nome === filter);
-            // Pegar apenas os últimos 10 registros para o gráfico não ficar apertado
-            const last10 = data.slice(-10);
-            
-            myChart.data.labels = last10.map(d => d.data);
-            myChart.data.datasets[0].data = last10.map(d => d.peso);
+            const data = e.target.result.filter(t => t.nome === filter && !t.warmup).slice(-8);
+            myChart.data.labels = data.map(d => d.data);
+            myChart.data.datasets[0].data = data.map(d => d.peso);
             myChart.update();
         };
     }
+
+    function showLastLog() {
+        const name = document.getElementById('exName').value.trim().toUpperCase();
+        const store = db.transaction("logs").objectStore("logs");
+        store.getAll().onsuccess = (e) => {
+            const logs = e.target.result.filter(l => l.nome === name);
+            const last = logs[logs.length - 1];
+            document.getElementById('lastLogInfo').innerText = last ? 
+                `Última vez: ${last.peso}kg x ${last.reps}` : "";
+        };
+    }
 </script>
-
 </body>
-
 </html>

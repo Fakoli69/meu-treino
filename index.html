@@ -2,34 +2,114 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aura Fit - Elite</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-:root{--primary:#00ff88;--bg:#121212;--card:#1e1e1e;--text:#fff;--secondary:#2a2a2a;}
-body{font-family:sans-serif;background:var(--bg);color:var(--text);margin:0;padding-bottom:20px;}
+:root{
+ --primary:#00ff88;
+ --bg:#121212;
+ --card:#1e1e1e;
+ --text:#fff;
+ --secondary:#2a2a2a;
+}
+
+body{
+ font-family:sans-serif;
+ background:var(--bg);
+ color:var(--text);
+ margin:0;
+ padding-bottom:20px;
+}
+
 .container{padding:15px;}
-.card{background:var(--card);border-radius:16px;padding:20px;margin-bottom:15px;}
 
-label{display:block;font-size:.75rem;color:var(--primary);margin-bottom:5px;font-weight:bold;text-transform:uppercase;}
-input,select{background:var(--secondary);border:1px solid #333;color:white;padding:14px;border-radius:10px;width:100%;box-sizing:border-box;margin-bottom:10px;outline:none;}
+.card{
+ background:var(--card);
+ border-radius:16px;
+ padding:20px;
+ margin-bottom:15px;
+ box-shadow:0 4px 15px rgba(0,0,0,0.4);
+}
 
-.unit-toggle{display:flex;background:var(--secondary);border-radius:10px;margin-bottom:15px;padding:5px;}
-.unit-toggle button{flex:1;border:none;background:none;color:#888;padding:10px;font-weight:bold;border-radius:8px;cursor:pointer;}
-.unit-toggle button.active{background:var(--primary);color:#000;}
+label{
+ display:block;
+ font-size:.75rem;
+ color:var(--primary);
+ margin-bottom:5px;
+ font-weight:bold;
+ text-transform:uppercase;
+}
 
-.warmup-row{display:flex;align-items:center;gap:10px;margin-bottom:15px;padding:5px;}
-.warmup-row input{width:auto;margin:0;}
+input,select{
+ background:var(--secondary);
+ border:1px solid #333;
+ color:white;
+ padding:14px;
+ border-radius:10px;
+ width:100%;
+ margin-bottom:10px;
+ outline:none;
+}
 
-.btn-main{background:var(--primary);color:#000;border:none;padding:16px;border-radius:12px;width:100%;font-weight:900;text-transform:uppercase;cursor:pointer;}
+.unit-toggle{
+ display:flex;
+ background:var(--secondary);
+ border-radius:10px;
+ margin-bottom:15px;
+ padding:5px;
+}
 
-.history-item{display:flex;justify-content:space-between;align-items:center;background:#222;padding:12px;border-radius:8px;margin-top:5px;font-size:.9rem;}
-.btn-del{background:#ff4444;color:white;border:none;border-radius:5px;padding:5px 10px;cursor:pointer;font-weight:bold;}
+.unit-toggle button{
+ flex:1;
+ border:none;
+ background:none;
+ color:#888;
+ padding:10px;
+ font-weight:bold;
+ border-radius:8px;
+ cursor:pointer;
+}
 
-.last-log{font-size:.85rem;color:#888;margin-bottom:10px;}
+.unit-toggle button.active{
+ background:var(--primary);
+ color:#000;
+}
+
+.btn-main{
+ background:var(--primary);
+ color:#000;
+ border:none;
+ padding:16px;
+ border-radius:12px;
+ width:100%;
+ font-weight:900;
+ cursor:pointer;
+}
+
+.history-item{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ background:#222;
+ padding:12px;
+ border-radius:8px;
+ margin-top:5px;
+}
+
+.btn-del{
+ background:#ff4444;
+ border:none;
+ color:#fff;
+ padding:5px 10px;
+ border-radius:6px;
+ cursor:pointer;
+}
+
 .hidden{display:none;}
 .chart-area{height:200px;}
+.last-log{font-size:.85rem;color:#aaa;margin-bottom:10px;}
 </style>
 </head>
 
@@ -45,7 +125,8 @@ input,select{background:var(--secondary);border:1px solid #333;color:white;paddi
 
 <div class="card">
 <label>Registrar Série</label>
-<input type="text" id="exName" placeholder="EX: AGACHAMENTO" oninput="showLastLog()">
+
+<input type="text" id="exName" placeholder="EX: SUPINO" oninput="showLastLog()">
 <div id="lastLogInfo" class="last-log"></div>
 
 <div class="unit-toggle">
@@ -66,19 +147,16 @@ input,select{background:var(--secondary);border:1px solid #333;color:white;paddi
 
 <input type="number" id="exReps" placeholder="Repetições">
 
-<div class="warmup-row">
-<input type="checkbox" id="isWarmup">
-<span style="font-size:.8rem;color:#666">Aquecimento (não vai para o gráfico)</span>
-</div>
+<label><input type="checkbox" id="isWarmup"> Aquecimento</label>
 
-<button class="btn-main" onclick="saveExercise()">Salvar Registro</button>
+<button id="saveBtn" class="btn-main" onclick="saveExercise()">Salvar Registro</button>
 
 </div>
 
 <div class="card">
-<label>Histórico Recente</label>
+<label>Histórico</label>
 <div id="historyList"></div>
-<button class="btn-main" onclick="exportData()">Exportar Histórico</button>
+<button class="btn-main" onclick="exportData()">Exportar</button>
 </div>
 
 </div>
@@ -90,226 +168,208 @@ let myChart;
 let currentUnit='kg';
 let currentWorkout=Date.now();
 
+// UNIT SWITCH
 function setUnit(unit){
-currentUnit=unit;
-document.getElementById('btnKg').classList.toggle('active',unit==='kg');
-document.getElementById('btnPlaca').classList.toggle('active',unit==='placa');
-document.getElementById('sectionKg').classList.toggle('hidden',unit==='placa');
-document.getElementById('sectionPlaca').classList.toggle('hidden',unit==='kg');
+ currentUnit=unit;
+
+ btnKg.classList.toggle('active',unit==='kg');
+ btnPlaca.classList.toggle('active',unit==='placa');
+
+ sectionKg.classList.toggle('hidden',unit==='placa');
+ sectionPlaca.classList.toggle('hidden',unit==='kg');
 }
 
+// DB
 const request=indexedDB.open("AuraFitEliteDB",4);
 
-request.onupgradeneeded=(e)=>{
-db=e.target.result;
-if(!db.objectStoreNames.contains("logs")){
-db.createObjectStore("logs",{keyPath:"id",autoIncrement:true});
-}
+request.onupgradeneeded=e=>{
+ db=e.target.result;
+ if(!db.objectStoreNames.contains("logs")){
+  db.createObjectStore("logs",{keyPath:"id",autoIncrement:true});
+ }
 };
 
-request.onsuccess=(e)=>{
-db=e.target.result;
-initChart();
-refreshUI();
+request.onsuccess=e=>{
+ db=e.target.result;
+ initChart();
+ refreshUI();
 };
 
+// CHART
 function initChart(){
-const ctx=document.getElementById('evolutionChart').getContext('2d');
-myChart=new Chart(ctx,{
-type:'line',
-data:{
-labels:[],
-datasets:[{
-label:'kg',
-data:[],
-borderColor:'#00ff88',
-tension:.4,
-fill:true,
-backgroundColor:'rgba(0,255,136,0.1)'
-}]
-},
-options:{
-responsive:true,
-maintainAspectRatio:false,
-plugins:{legend:{display:false}}
-}
-});
+ const ctx=document.getElementById('evolutionChart').getContext('2d');
+
+ myChart=new Chart(ctx,{
+  type:'line',
+  data:{
+   labels:[],
+   datasets:[{
+    data:[],
+    borderColor:'#00ff88',
+    borderWidth:3,
+    pointRadius:4,
+    tension:.4,
+    fill:true,
+    backgroundColor:'rgba(0,255,136,0.1)'
+   }]
+  },
+  options:{responsive:true,maintainAspectRatio:false}
+ });
 }
 
+// SAVE
 function saveExercise(){
 
-const name=document.getElementById('exName').value.trim().toUpperCase();
-const reps=document.getElementById('exReps').value;
-const isWarmup=document.getElementById('isWarmup').checked;
+ const name=exName.value.trim().toUpperCase();
+ const reps=parseInt(exReps.value);
+ const isWarmup=isWarmupCheckbox.checked;
 
-let weight=(currentUnit==='kg')
-?parseFloat(document.getElementById('exWeight').value)
-:parseFloat(document.getElementById('numPlacas').value)*parseFloat(document.getElementById('kgPorPlaca').value);
+ let weight=(currentUnit==='kg')
+ ?parseFloat(exWeight.value)
+ :parseFloat(numPlacas.value)*parseFloat(kgPorPlaca.value);
 
-if(!name||isNaN(weight))return;
+ // VALIDAÇÃO
+ if(!name){alert("Digite o exercício");return;}
+ if(!reps || reps<=0){alert("Repetições inválidas");return;}
+ if(isNaN(weight) || weight<=0){alert("Peso inválido");return;}
 
-const transaction=db.transaction(["logs"],"readwrite");
+ const btn=saveBtn;
+ btn.innerText="Salvando...";
+ btn.disabled=true;
 
-transaction.objectStore("logs").add({
-nome:name,
-peso:weight,
-reps:reps,
-warmup:isWarmup,
-workout:currentWorkout,
-timestamp:Date.now(),
-data:new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})
-});
+ const tx=db.transaction(["logs"],"readwrite");
 
-transaction.oncomplete=()=>{
-document.getElementById('exWeight').value='';
-document.getElementById('isWarmup').checked=false;
-refreshUI(name);
-};
+ tx.objectStore("logs").add({
+  nome:name,
+  peso:weight,
+  reps:reps,
+  warmup:isWarmup,
+  timestamp:Date.now(),
+  data:new Date().toLocaleDateString('pt-BR')
+ });
 
+ tx.oncomplete=()=>{
+  btn.innerText="Salvo ✔";
+
+  setTimeout(()=>{
+   btn.innerText="Salvar Registro";
+   btn.disabled=false;
+  },1000);
+
+  exWeight.value='';
+  exReps.value='';
+  isWarmupCheckbox.checked=false;
+
+  refreshUI(name);
+ };
 }
 
+// UI
 function refreshUI(selected){
+ const store=db.transaction("logs").objectStore("logs");
 
-const store=db.transaction("logs").objectStore("logs");
+ store.getAll().onsuccess=e=>{
+  const logs=e.target.result;
 
-store.getAll().onsuccess=(e)=>{
+  const nomes=[...new Set(logs.map(t=>t.nome))];
 
-const logs=e.target.result;
+  filterSelect.innerHTML=nomes.map(n=>`<option>${n}</option>`).join('');
 
-const nomes=[...new Set(logs.map(t=>t.nome))];
+  if(selected) filterSelect.value=selected;
 
-const select=document.getElementById('filterSelect');
-
-select.innerHTML=nomes.map(n=>`<option value="${n}">${n}</option>`).join('');
-
-if(selected)select.value=selected;
-
-updateChartData();
-renderHistory(logs);
-
-};
-
+  updateChartData();
+  renderHistory(logs);
+ };
 }
 
+// HISTORY
 function renderHistory(logs){
+ const ultimos=logs.sort((a,b)=>b.timestamp-a.timestamp).slice(0,5);
 
-const historyList=document.getElementById('historyList');
-
-const ultimos=logs.sort((a,b)=>b.timestamp-a.timestamp).slice(0,5);
-
-historyList.innerHTML=ultimos.map(log=>`
-<div class="history-item">
-<span><b>${log.nome}</b>: ${log.peso}kg x ${log.reps}</span>
-<button class="btn-del" onclick="deleteLog(${log.id})">X</button>
-</div>
-`).join('');
-
+ historyList.innerHTML=ultimos.map(log=>`
+  <div class="history-item">
+   <span>
+    <b>${log.nome}</b>: ${log.peso}kg x ${log.reps}
+    <br><small>${log.data}</small>
+   </span>
+   <button class="btn-del" onclick="deleteLog(${log.id})">X</button>
+  </div>
+ `).join('');
 }
 
+// DELETE
 function deleteLog(id){
-
-if(confirm("Apagar este registro?")){
-
-const transaction=db.transaction(["logs"],"readwrite");
-
-transaction.objectStore("logs").delete(id);
-
-transaction.oncomplete=()=>refreshUI();
-
+ if(confirm("Apagar?")){
+  const tx=db.transaction(["logs"],"readwrite");
+  tx.objectStore("logs").delete(id);
+  tx.oncomplete=()=>refreshUI(filterSelect.value);
+ }
 }
 
-}
-
+// CHART UPDATE
 function updateChartData(){
+ const filter=filterSelect.value;
 
-const filter=document.getElementById('filterSelect').value;
+ const store=db.transaction("logs").objectStore("logs");
 
-const store=db.transaction("logs").objectStore("logs");
+ store.getAll().onsuccess=e=>{
+  const data=e.target.result
+   .filter(t=>t.nome===filter && !t.warmup)
+   .slice(-8);
 
-store.getAll().onsuccess=(e)=>{
+  myChart.data.labels=data.map(d=>d.data);
+  myChart.data.datasets[0].data=data.map(d=>d.peso);
 
-const data=e.target.result
-.filter(t=>t.nome===filter&&!t.warmup)
-.slice(-8);
-
-myChart.data.labels=data.map(d=>d.data);
-myChart.data.datasets[0].data=data.map(d=>d.peso);
-
-myChart.update();
-
-};
-
+  myChart.update();
+ };
 }
 
-function getPR(logs,name){
-
-const exLogs=logs.filter(l=>l.nome===name&&!l.warmup);
-
-if(exLogs.length===0)return 0;
-
-return Math.max(...exLogs.map(l=>l.peso));
-
-}
-
+// LAST LOG
 function showLastLog(){
+ const name=exName.value.trim().toUpperCase();
 
-const name=document.getElementById('exName').value.trim().toUpperCase();
+ const store=db.transaction("logs").objectStore("logs");
 
-const store=db.transaction("logs").objectStore("logs");
+ store.getAll().onsuccess=e=>{
+  const logs=e.target.result.filter(l=>l.nome===name);
 
-store.getAll().onsuccess=(e)=>{
+  if(logs.length===0){
+   lastLogInfo.innerText="";
+   return;
+  }
 
-const logs=e.target.result.filter(l=>l.nome===name);
+  logs.sort((a,b)=>a.timestamp-b.timestamp);
 
-if(logs.length===0){
-document.getElementById('lastLogInfo').innerText="";
-return;
+  const last=logs.at(-1);
+  const prev=logs.at(-2);
+
+  const pr=Math.max(...logs.map(l=>l.peso));
+
+  let progress="";
+  if(prev){
+   const diff=last.peso-prev.peso;
+   if(diff>0) progress=` ↑ +${diff}kg`;
+  }
+
+  lastLogInfo.innerText=`PR: ${pr}kg | Última: ${last.peso}kg x ${last.reps}${progress}`;
+ };
 }
 
-logs.sort((a,b)=>a.timestamp-b.timestamp);
-
-const last=logs[logs.length-1];
-const prev=logs[logs.length-2];
-
-const pr=getPR(logs,name);
-
-let progress="";
-
-if(prev){
-const diff=last.peso-prev.peso;
-if(diff>0)progress=` ↑ +${diff}kg`;
-}
-
-document.getElementById('lastLogInfo').innerText=
-`PR: ${pr}kg | Última vez: ${last.peso}kg x ${last.reps}${progress}`;
-
-};
-
-}
-
+// EXPORT
 function exportData(){
+ const store=db.transaction("logs").objectStore("logs");
 
-const store=db.transaction("logs").objectStore("logs");
+ store.getAll().onsuccess=e=>{
+  const blob=new Blob([JSON.stringify(e.target.result,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
 
-store.getAll().onsuccess=(e)=>{
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="backup.json";
+  a.click();
 
-const data=e.target.result;
-
-const json=JSON.stringify(data,null,2);
-
-const blob=new Blob([json],{type:"application/json"});
-
-const url=URL.createObjectURL(blob);
-
-const a=document.createElement("a");
-a.href=url;
-a.download="aurafit-backup.json";
-a.click();
-
-URL.revokeObjectURL(url);
-
-};
-
+  URL.revokeObjectURL(url);
+ };
 }
 
 </script>

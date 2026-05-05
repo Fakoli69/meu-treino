@@ -166,7 +166,23 @@ input,select{
 let db;
 let myChart;
 let currentUnit='kg';
-let currentWorkout=Date.now();
+
+// ELEMENTOS
+const exName = document.getElementById("exName");
+const exWeight = document.getElementById("exWeight");
+const exReps = document.getElementById("exReps");
+const numPlacas = document.getElementById("numPlacas");
+const kgPorPlaca = document.getElementById("kgPorPlaca");
+const isWarmupCheckbox = document.getElementById("isWarmup");
+const saveBtn = document.getElementById("saveBtn");
+const filterSelect = document.getElementById("filterSelect");
+const historyList = document.getElementById("historyList");
+const lastLogInfo = document.getElementById("lastLogInfo");
+
+const btnKg = document.getElementById("btnKg");
+const btnPlaca = document.getElementById("btnPlaca");
+const sectionKg = document.getElementById("sectionKg");
+const sectionPlaca = document.getElementById("sectionPlaca");
 
 // UNIT SWITCH
 function setUnit(unit){
@@ -219,6 +235,7 @@ function initChart(){
 
 // SAVE
 function saveExercise(){
+ if (!db) return;
 
  const name=exName.value.trim().toUpperCase();
  const reps=parseInt(exReps.value);
@@ -228,7 +245,6 @@ function saveExercise(){
  ?parseFloat(exWeight.value)
  :parseFloat(numPlacas.value)*parseFloat(kgPorPlaca.value);
 
- // VALIDAÇÃO
  if(!name){alert("Digite o exercício");return;}
  if(!reps || reps<=0){alert("Repetições inválidas");return;}
  if(isNaN(weight) || weight<=0){alert("Peso inválido");return;}
@@ -266,6 +282,8 @@ function saveExercise(){
 
 // UI
 function refreshUI(selected){
+ if (!db) return;
+
  const store=db.transaction("logs").objectStore("logs");
 
  store.getAll().onsuccess=e=>{
@@ -308,6 +326,8 @@ function deleteLog(id){
 
 // CHART UPDATE
 function updateChartData(){
+ if (!db || !myChart) return;
+
  const filter=filterSelect.value;
 
  const store=db.transaction("logs").objectStore("logs");
@@ -326,6 +346,8 @@ function updateChartData(){
 
 // LAST LOG
 function showLastLog(){
+ if (!db) return;
+
  const name=exName.value.trim().toUpperCase();
 
  const store=db.transaction("logs").objectStore("logs");
@@ -357,6 +379,8 @@ function showLastLog(){
 
 // EXPORT
 function exportData(){
+ if (!db) return;
+
  const store=db.transaction("logs").objectStore("logs");
 
  store.getAll().onsuccess=e=>{

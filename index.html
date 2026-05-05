@@ -1,389 +1,219 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aura Fit - Elite</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aura Fit - Elite</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        :root {
-            --primary: #00ff88;
-            --bg: #121212;
-            --card: #1e1e1e;
-            --text: #fff;
-            --secondary: #2a2a2a;
-        }
+<style>
+:root{
+ --primary:#00ff88;
+ --bg:#121212;
+ --card:#1e1e1e;
+ --text:#fff;
+ --secondary:#2a2a2a;
+}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding-bottom: 20px;
-        }
+body{
+ font-family:sans-serif;
+ background:var(--bg);
+ color:var(--text);
+ margin:0;
+ padding-bottom:20px;
+}
 
-        .container { padding: 15px; max-width: 500px; margin: auto; }
+.container{padding:15px;}
 
-        .card {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-        }
+.card{
+ background:var(--card);
+ border-radius:16px;
+ padding:20px;
+ margin-bottom:15px;
+}
 
-        label {
-            display: block;
-            font-size: .75rem;
-            color: var(--primary);
-            margin-bottom: 8px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
+input,select{
+ background:var(--secondary);
+ color:white;
+ padding:12px;
+ border-radius:10px;
+ width:100%;
+ margin-bottom:10px;
+}
 
-        input, select {
-            background: var(--secondary);
-            border: 1px solid #333;
-            color: white;
-            padding: 12px;
-            border-radius: 10px;
-            width: 100%;
-            margin-bottom: 12px;
-            box-sizing: border-box; /* Garante que o padding não quebre a largura */
-            outline: none;
-        }
+.btn-main{
+ background:var(--primary);
+ color:#000;
+ border:none;
+ padding:14px;
+ border-radius:10px;
+ width:100%;
+ font-weight:bold;
+ cursor:pointer;
+}
 
-        .unit-toggle {
-            display: flex;
-            background: var(--secondary);
-            border-radius: 10px;
-            margin-bottom: 15px;
-            padding: 4px;
-        }
-
-        .unit-toggle button {
-            flex: 1;
-            border: none;
-            background: none;
-            color: #888;
-            padding: 10px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .unit-toggle button.active {
-            background: var(--primary);
-            color: #000;
-        }
-
-        .btn-main {
-            background: var(--primary);
-            color: #000;
-            border: none;
-            padding: 16px;
-            border-radius: 12px;
-            width: 100%;
-            font-weight: 900;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-
-        .btn-main:active { transform: scale(0.98); }
-
-        .history-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #222;
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 8px;
-        }
-
-        .btn-del {
-            background: #ff4444;
-            border: none;
-            color: #fff;
-            padding: 5px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .hidden { display: none; }
-        .chart-area { height: 200px; position: relative; }
-        .last-log { font-size: .85rem; color: #aaa; margin-bottom: 10px; min-height: 1.2em; }
-        
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-            cursor: pointer;
-        }
-        .checkbox-container input { width: auto; margin: 0; }
-    </style>
+.hidden{display:none;}
+.chart-area{height:200px;}
+</style>
 </head>
 
 <body>
 
 <div class="container">
-    <div class="card">
-        <label>Evolução de Carga</label>
-        <select id="filterSelect" onchange="updateChartData()"></select>
-        <div class="chart-area">
-            <canvas id="evolutionChart"></canvas>
-        </div>
-    </div>
 
-    <div class="card">
-        <label>Registrar Série</label>
-        <input type="text" id="exName" placeholder="EX: SUPINO" oninput="showLastLog()">
-        <div id="lastLogInfo" class="last-log"></div>
+<div class="card">
+<label>Evolução</label>
+<select id="filterSelect" onchange="updateChartData()"></select>
+<div class="chart-area"><canvas id="chart"></canvas></div>
+</div>
 
-        <div class="unit-toggle">
-            <button id="btnKg" class="active" onclick="setUnit('kg')">KG</button>
-            <button id="btnPlaca" onclick="setUnit('placa')">PLACAS</button>
-        </div>
+<div class="card">
+<input type="text" id="exName" placeholder="Exercício">
+<input type="number" id="exWeight" placeholder="Peso">
+<input type="number" id="exReps" placeholder="Reps">
+<button class="btn-main" onclick="save()">Salvar</button>
+</div>
 
-        <div id="sectionKg">
-            <input type="number" id="exWeight" placeholder="Peso (kg)" inputmode="decimal">
-        </div>
+<div class="card">
+<button class="btn-main" onclick="exportData()">Exportar Backup</button>
+<input type="file" onchange="importData(this.files[0])">
+</div>
 
-        <div id="sectionPlaca" class="hidden">
-            <div style="display:flex; gap:10px;">
-                <input type="number" id="numPlacas" placeholder="Qtd Placas" inputmode="numeric">
-                <input type="number" id="kgPorPlaca" value="5" title="Peso por placa">
-            </div>
-        </div>
-
-        <input type="number" id="exReps" placeholder="Repetições" inputmode="numeric">
-
-        <label class="checkbox-container">
-            <input type="checkbox" id="isWarmup"> Aquecimento
-        </label>
-
-        <button id="saveBtn" class="btn-main" onclick="saveExercise()">Salvar Registro</button>
-    </div>
-
-    <div class="card">
-        <label>Histórico Recente</label>
-        <div id="historyList"></div>
-        <button class="btn-main" style="margin-top:15px; background:#333; color:white;" onclick="exportData()">Exportar JSON</button>
-    </div>
 </div>
 
 <script>
+
 let db;
-let myChart;
-let currentUnit = 'kg';
+let chart;
 
-// Inicialização do Banco de Dados
-const request = indexedDB.open("AuraFitEliteDB", 4);
+// DB
+const request=indexedDB.open("AuraFitEliteDB",4);
 
-request.onupgradeneeded = e => {
-    db = e.target.result;
-    if (!db.objectStoreNames.contains("logs")) {
-        db.createObjectStore("logs", { keyPath: "id", autoIncrement: true });
-    }
+request.onupgradeneeded=e=>{
+ db=e.target.result;
+ if(!db.objectStoreNames.contains("logs")){
+  db.createObjectStore("logs",{keyPath:"id",autoIncrement:true});
+ }
 };
 
-request.onsuccess = e => {
-    db = e.target.result;
-    initChart(); // Inicializa o gráfico após o DB e DOM estarem prontos
-    refreshUI();
+request.onsuccess=e=>{
+ db=e.target.result;
+ initChart();
+ refresh();
 };
 
-function initChart() {
-    const ctx = document.getElementById('evolutionChart').getContext('2d');
-    myChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: [{
-                label: 'Carga (kg)',
-                data: [],
-                borderColor: '#00ff88',
-                borderWidth: 3,
-                pointRadius: 4,
-                tension: .4,
-                fill: true,
-                backgroundColor: 'rgba(0,255,136,0.1)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { grid: { color: '#333' }, ticks: { color: '#888' } },
-                x: { grid: { display: false }, ticks: { color: '#888' } }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
+// CHART
+function initChart(){
+ const ctx=document.getElementById('chart').getContext('2d');
+
+ chart=new Chart(ctx,{
+  type:'line',
+  data:{
+   labels:[],
+   datasets:[{
+    label:"Carga",
+    data:[]
+   }]
+  }
+ });
 }
 
-function setUnit(unit) {
-    currentUnit = unit;
-    document.getElementById('btnKg').classList.toggle('active', unit === 'kg');
-    document.getElementById('btnPlaca').classList.toggle('active', unit === 'placa');
-    document.getElementById('sectionKg').classList.toggle('hidden', unit === 'placa');
-    document.getElementById('sectionPlaca').classList.toggle('hidden', unit === 'kg');
+// SAVE
+function save(){
+ if(!db) return;
+
+ const tx=db.transaction("logs","readwrite");
+
+ tx.objectStore("logs").add({
+  nome:exName.value,
+  peso:parseFloat(exWeight.value),
+  reps:parseInt(exReps.value),
+  timestamp:Date.now()
+ });
+
+ tx.oncomplete=refresh;
 }
 
-function saveExercise() {
-    if (!db) return;
+// REFRESH
+function refresh(){
+ const store=db.transaction("logs").objectStore("logs");
 
-    const name = document.getElementById("exName").value.trim().toUpperCase();
-    const reps = parseInt(document.getElementById("exReps").value);
-    const isWarmup = document.getElementById("isWarmup").checked;
-    
-    let weight;
-    if (currentUnit === 'kg') {
-        weight = parseFloat(document.getElementById("exWeight").value);
-    } else {
-        weight = parseFloat(document.getElementById("numPlacas").value) * parseFloat(document.getElementById("kgPorPlaca").value);
-    }
+ store.getAll().onsuccess=e=>{
+  const data=e.target.result;
 
-    if (!name) return alert("Digite o nome do exercício");
-    if (isNaN(reps) || reps <= 0) return alert("Repetições inválidas");
-    if (isNaN(weight) || weight <= 0) return alert("Peso inválido");
+  const nomes=[...new Set(data.map(d=>d.nome))];
 
-    const btn = document.getElementById("saveBtn");
-    btn.innerText = "Salvando...";
-    btn.disabled = true;
+  filterSelect.innerHTML=nomes.map(n=>`<option>${n}</option>`);
 
-    const tx = db.transaction(["logs"], "readwrite");
-    const store = tx.objectStore("logs");
-
-    store.add({
-        nome: name,
-        peso: weight,
-        reps,
-        warmup: isWarmup,
-        timestamp: Date.now(),
-        data: new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'})
-    });
-
-    tx.oncomplete = () => {
-        btn.innerText = "Salvo ✔";
-        setTimeout(() => {
-            btn.innerText = "Salvar Registro";
-            btn.disabled = false;
-        }, 1000);
-
-        document.getElementById("exWeight").value = '';
-        document.getElementById("exReps").value = '';
-        document.getElementById("numPlacas").value = '';
-        
-        refreshUI(name);
-        showLastLog();
-    };
+  updateChartData();
+ };
 }
 
-function refreshUI(selectedName) {
-    const store = db.transaction("logs").objectStore("logs");
-    store.getAll().onsuccess = e => {
-        const logs = e.target.result;
-        
-        // Atualizar Select de Filtro
-        const nomes = [...new Set(logs.map(t => t.nome))];
-        const filterSelect = document.getElementById("filterSelect");
-        
-        if (nomes.length > 0) {
-            filterSelect.innerHTML = nomes.map(n => `<option value="${n}">${n}</option>`).join('');
-            if (selectedName) filterSelect.value = selectedName;
-        } else {
-            filterSelect.innerHTML = '<option>Nenhum dado</option>';
-        }
+// CHART UPDATE
+function updateChartData(){
+ if(!db || !chart) return;
 
-        renderHistory(logs);
-        updateChartData();
-    };
+ const filter=filterSelect.value;
+
+ const store=db.transaction("logs").objectStore("logs");
+
+ store.getAll().onsuccess=e=>{
+  const data=e.target.result.filter(d=>d.nome===filter);
+
+  chart.data.labels=data.map(d=>new Date(d.timestamp).toLocaleDateString());
+  chart.data.datasets[0].data=data.map(d=>d.peso);
+  chart.data.datasets[0].label=filter || "Carga";
+
+  chart.update();
+ };
 }
 
-function renderHistory(logs) {
-    const list = document.getElementById("historyList");
-    const ultimos = logs.sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+// EXPORT
+function exportData(){
+ const store=db.transaction("logs").objectStore("logs");
 
-    list.innerHTML = ultimos.map(log => `
-        <div class="history-item">
-            <span>
-                <b>${log.nome}</b> ${log.warmup ? '<small>(Aq.)</small>' : ''}<br>
-                ${log.peso}kg x ${log.reps} <small style="color:#666">@ ${log.data}</small>
-            </span>
-            <button class="btn-del" onclick="deleteLog(${log.id})">✕</button>
-        </div>
-    `).join('');
+ store.getAll().onsuccess=e=>{
+  const blob=new Blob([JSON.stringify(e.target.result,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+
+  const a=document.createElement("a");
+  a.href=url;
+  a.download="backup.json";
+  a.click();
+ };
 }
 
-function deleteLog(id) {
-    if (confirm("Apagar este registro?")) {
-        const tx = db.transaction(["logs"], "readwrite");
-        tx.objectStore("logs").delete(id);
-        tx.oncomplete = () => refreshUI(document.getElementById("filterSelect").value);
-    }
+// IMPORT (🔥 NOVO)
+function importData(file){
+ if(!file || !db) return;
+
+ const reader=new FileReader();
+
+ reader.onload=function(e){
+  try{
+   const data=JSON.parse(e.target.result);
+
+   const tx=db.transaction("logs","readwrite");
+   const store=tx.objectStore("logs");
+
+   data.forEach(item=>{
+    // evita duplicar pelo timestamp
+    store.add(item);
+   });
+
+   tx.oncomplete=()=>{
+    alert("Backup importado com sucesso!");
+    refresh();
+   };
+
+  }catch(err){
+   alert("Arquivo inválido");
+  }
+ };
+
+ reader.readAsText(file);
 }
 
-function updateChartData() {
-    if (!myChart) return;
-    const filter = document.getElementById("filterSelect").value;
-    if (!filter || filter === "Nenhum dado") return;
-
-    const store = db.transaction("logs").objectStore("logs");
-    store.getAll().onsuccess = e => {
-        const data = e.target.result
-            .filter(t => t.nome === filter && !t.warmup)
-            .sort((a, b) => a.timestamp - b.timestamp)
-            .slice(-10);
-
-        myChart.data.labels = data.map(d => d.data);
-        myChart.data.datasets[0].data = data.map(d => d.peso);
-        myChart.update();
-    };
-}
-
-function showLastLog() {
-    const name = document.getElementById("exName").value.trim().toUpperCase();
-    const infoDiv = document.getElementById("lastLogInfo");
-    
-    if (!name) { infoDiv.innerText = ""; return; }
-
-    const store = db.transaction("logs").objectStore("logs");
-    store.getAll().onsuccess = e => {
-        const logs = e.target.result.filter(l => l.nome === name);
-        if (logs.length === 0) { infoDiv.innerText = "Primeira vez deste exercício!"; return; }
-
-        logs.sort((a, b) => a.timestamp - b.timestamp);
-        const last = logs[logs.length - 1];
-        const pr = Math.max(...logs.map(l => l.peso));
-        
-        let trend = "";
-        if (logs.length > 1) {
-            const prev = logs[logs.length - 2];
-            const diff = last.peso - prev.peso;
-            if (diff > 0) trend = ` 📈 +${diff}kg`;
-            else if (diff < 0) trend = ` 📉 ${diff}kg`;
-        }
-
-        infoDiv.innerHTML = `Recorde: <b>${pr}kg</b> | Última: ${last.peso}kg x ${last.reps}${trend}`;
-    };
-}
-
-function exportData() {
-    const store = db.transaction("logs").objectStore("logs");
-    store.getAll().onsuccess = e => {
-        const data = JSON.stringify(e.target.result, null, 2);
-        const blob = new Blob([data], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `aura-fit-backup-${new Date().toISOString().slice(0,10)}.json`;
-        a.click();
-    };
-}
 </script>
 </body>
 </html>

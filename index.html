@@ -220,6 +220,7 @@ function initChart(){
   data:{
    labels:[],
    datasets:[{
+    label:'Carga (kg)',
     data:[],
     borderColor:'#00ff88',
     borderWidth:3,
@@ -229,7 +230,11 @@ function initChart(){
     backgroundColor:'rgba(0,255,136,0.1)'
    }]
   },
-  options:{responsive:true,maintainAspectRatio:false}
+  options:{
+   responsive:true,
+   maintainAspectRatio:false,
+   plugins:{legend:{display:true}}
+  }
  });
 }
 
@@ -249,27 +254,25 @@ function saveExercise(){
  if(!reps || reps<=0){alert("Repetições inválidas");return;}
  if(isNaN(weight) || weight<=0){alert("Peso inválido");return;}
 
- const btn=saveBtn;
- btn.innerText="Salvando...";
- btn.disabled=true;
+ saveBtn.innerText="Salvando...";
+ saveBtn.disabled=true;
 
  const tx=db.transaction(["logs"],"readwrite");
 
  tx.objectStore("logs").add({
   nome:name,
   peso:weight,
-  reps:reps,
+  reps,
   warmup:isWarmup,
   timestamp:Date.now(),
   data:new Date().toLocaleDateString('pt-BR')
  });
 
  tx.oncomplete=()=>{
-  btn.innerText="Salvo ✔";
-
+  saveBtn.innerText="Salvo ✔";
   setTimeout(()=>{
-   btn.innerText="Salvar Registro";
-   btn.disabled=false;
+   saveBtn.innerText="Salvar Registro";
+   saveBtn.disabled=false;
   },1000);
 
   exWeight.value='';
@@ -290,7 +293,6 @@ function refreshUI(selected){
   const logs=e.target.result;
 
   const nomes=[...new Set(logs.map(t=>t.nome))];
-
   filterSelect.innerHTML=nomes.map(n=>`<option>${n}</option>`).join('');
 
   if(selected) filterSelect.value=selected;
@@ -339,6 +341,7 @@ function updateChartData(){
 
   myChart.data.labels=data.map(d=>d.data);
   myChart.data.datasets[0].data=data.map(d=>d.peso);
+  myChart.data.datasets[0].label=filter || "Carga";
 
   myChart.update();
  };
@@ -364,7 +367,6 @@ function showLastLog(){
 
   const last=logs.at(-1);
   const prev=logs.at(-2);
-
   const pr=Math.max(...logs.map(l=>l.peso));
 
   let progress="";

@@ -8,212 +8,519 @@
 
 <style>
 :root{
- --primary:#00ff88;
- --bg:#121212;
- --card:#1e1e1e;
- --text:#fff;
- --secondary:#2a2a2a;
+  --primary:#25e07b;
+  --bg:#0f1115;
+  --card:#20242d;
+  --field:#11141a;
+  --line:#303642;
+  --text:#f4f7fb;
+  --muted:#9aa4b2;
+  --danger:#ff5c7a;
 }
+
+*{box-sizing:border-box}
 
 body{
- font-family:sans-serif;
- background:var(--bg);
- color:var(--text);
- margin:0;
- padding-bottom:20px;
+  font-family:Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  margin:0;
+  min-height:100vh;
 }
 
-.container{padding:15px;}
+.app{
+  max-width:1000px;
+  margin:auto;
+  padding:20px;
+}
 
 .card{
- background:var(--card);
- border-radius:16px;
- padding:20px;
- margin-bottom:15px;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:18px;
+  margin-bottom:16px;
+}
+
+h1,h2{margin-top:0}
+
+input,select,button{
+  font:inherit;
 }
 
 input,select{
- background:var(--secondary);
- color:white;
- padding:12px;
- border-radius:10px;
- width:100%;
- margin-bottom:10px;
+  width:100%;
+  background:var(--field);
+  color:var(--text);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:12px;
+  margin-bottom:10px;
+}
+
+button{
+  border:0;
+  border-radius:8px;
+  padding:12px;
+  font-weight:bold;
+  cursor:pointer;
 }
 
 .btn-main{
- background:var(--primary);
- color:#000;
- border:none;
- padding:14px;
- border-radius:10px;
- width:100%;
- font-weight:bold;
- cursor:pointer;
+  width:100%;
+  background:var(--primary);
+  color:#06110b;
 }
 
-.hidden{display:none;}
-.chart-area{height:200px;}
+.btn-danger{
+  background:rgba(255,92,122,.15);
+  color:#ffb6c4;
+  border:1px solid rgba(255,92,122,.35);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1.4fr .8fr;
+  gap:16px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.stat{
+  background:#171a21;
+  border-radius:8px;
+  padding:14px;
+}
+
+.stat span{
+  display:block;
+  color:var(--muted);
+  font-size:.8rem;
+}
+
+.stat strong{
+  font-size:1.4rem;
+}
+
+.chart-area{
+  height:280px;
+}
+
+.history{
+  display:grid;
+  gap:10px;
+  max-height:380px;
+  overflow:auto;
+}
+
+.log{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:center;
+  background:#171a21;
+  border-radius:8px;
+  padding:12px;
+}
+
+.log-title{
+  font-weight:bold;
+}
+
+.log-meta{
+  color:var(--muted);
+  font-size:.85rem;
+}
+
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.file-btn{
+  position:relative;
+  text-align:center;
+  background:#2b313d;
+  color:white;
+}
+
+.file-btn input{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+}
+
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:20px;
+  transform:translateX(-50%);
+  background:#edfdf4;
+  color:#06110b;
+  padding:12px 16px;
+  border-radius:8px;
+  font-weight:bold;
+  display:none;
+}
+
+.toast.show{display:block}
+
+@media(max-width:800px){
+  .grid,.stats{grid-template-columns:1fr}
+}
 </style>
 </head>
 
 <body>
+<main class="app">
+  <h1>Aura Fit</h1>
 
-<div class="container">
+  <section class="grid">
+    <div>
+      <div class="stats">
+        <div class="stat">
+          <span>Treinos</span>
+          <strong id="statLogs">0</strong>
+        </div>
+        <div class="stat">
+          <span>Exercícios</span>
+          <strong id="statExercises">0</strong>
+        </div>
+        <div class="stat">
+          <span>Maior carga</span>
+          <strong id="statBest">0 kg</strong>
+        </div>
+      </div>
 
-<div class="card">
-<label>Evolução</label>
-<select id="filterSelect" onchange="updateChartData()"></select>
-<div class="chart-area"><canvas id="chart"></canvas></div>
-</div>
+      <div class="card">
+        <h2>Evolução</h2>
+        <select id="filterSelect" onchange="updateChartData()">
+          <option value="">Sem registros</option>
+        </select>
+        <div class="chart-area">
+          <canvas id="chart"></canvas>
+        </div>
+      </div>
+    </div>
 
-<div class="card">
-<input type="text" id="exName" placeholder="Exercício">
-<input type="number" id="exWeight" placeholder="Peso">
-<input type="number" id="exReps" placeholder="Reps">
-<button class="btn-main" onclick="save()">Salvar</button>
-</div>
+    <aside>
+      <div class="card">
+        <h2>Novo registro</h2>
+        <input type="text" id="exName" placeholder="Exercício">
+        <input type="number" id="exWeight" placeholder="Peso em kg" min="0" step="0.5">
+        <input type="number" id="exReps" placeholder="Repetições" min="1">
+        <button class="btn-main" onclick="save()">Salvar</button>
+      </div>
 
-<div class="card">
-<button class="btn-main" onclick="exportData()">Exportar Backup</button>
-<input type="file" onchange="importData(this.files[0])">
-</div>
+      <div class="card">
+        <h2>Backup</h2>
+        <div class="actions">
+          <button onclick="exportData()">Exportar</button>
+          <label class="file-btn">
+            Importar
+            <input type="file" accept="application/json" onchange="importData(this.files[0]); this.value=''">
+          </label>
+        </div>
+      </div>
 
-</div>
+      <div class="card">
+        <h2>Histórico</h2>
+        <div id="history" class="history"></div>
+      </div>
+
+      <div class="card">
+        <button class="btn-danger" onclick="clearAll()">Limpar tudo</button>
+      </div>
+    </aside>
+  </section>
+</main>
+
+<div id="toast" class="toast"></div>
 
 <script>
-
 let db;
 let chart;
+let allLogs = [];
 
-// DB
-const request=indexedDB.open("AuraFitEliteDB",4);
+const request = indexedDB.open("AuraFitEliteDB", 5);
 
-request.onupgradeneeded=e=>{
- db=e.target.result;
- if(!db.objectStoreNames.contains("logs")){
-  db.createObjectStore("logs",{keyPath:"id",autoIncrement:true});
- }
-};
+request.onupgradeneeded = function(event){
+  db = event.target.result;
 
-request.onsuccess=e=>{
- db=e.target.result;
- initChart();
- refresh();
-};
-
-// CHART
-function initChart(){
- const ctx=document.getElementById('chart').getContext('2d');
-
- chart=new Chart(ctx,{
-  type:'line',
-  data:{
-   labels:[],
-   datasets:[{
-    label:"Carga",
-    data:[]
-   }]
+  if(!db.objectStoreNames.contains("logs")){
+    db.createObjectStore("logs", {
+      keyPath: "id",
+      autoIncrement: true
+    });
   }
- });
+};
+
+request.onsuccess = function(event){
+  db = event.target.result;
+  initChart();
+  refresh();
+};
+
+function initChart(){
+  const ctx = document.getElementById("chart").getContext("2d");
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Carga",
+        data: [],
+        borderColor: "#25e07b",
+        backgroundColor: "rgba(37,224,123,.15)",
+        fill: true,
+        tension: .35
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
 }
 
-// SAVE
 function save(){
- if(!db) return;
+  const nome = document.getElementById("exName").value.trim();
+  const peso = parseFloat(document.getElementById("exWeight").value);
+  const reps = parseInt(document.getElementById("exReps").value);
 
- const tx=db.transaction("logs","readwrite");
+  if(!nome){
+    notify("Informe o exercício.");
+    return;
+  }
 
- tx.objectStore("logs").add({
-  nome:exName.value,
-  peso:parseFloat(exWeight.value),
-  reps:parseInt(exReps.value),
-  timestamp:Date.now()
- });
+  if(isNaN(peso) || peso < 0){
+    notify("Informe um peso válido.");
+    return;
+  }
 
- tx.oncomplete=refresh;
+  if(isNaN(reps) || reps < 1){
+    notify("Informe as repetições.");
+    return;
+  }
+
+  const tx = db.transaction("logs", "readwrite");
+
+  tx.objectStore("logs").add({
+    nome,
+    peso,
+    reps,
+    timestamp: Date.now()
+  });
+
+  tx.oncomplete = function(){
+    document.getElementById("exName").value = "";
+    document.getElementById("exWeight").value = "";
+    document.getElementById("exReps").value = "";
+
+    notify("Registro salvo.");
+    refresh(nome);
+  };
 }
 
-// REFRESH
-function refresh(){
- const store=db.transaction("logs").objectStore("logs");
+function refresh(preferredExercise){
+  const store = db.transaction("logs").objectStore("logs");
 
- store.getAll().onsuccess=e=>{
-  const data=e.target.result;
+  store.getAll().onsuccess = function(event){
+    allLogs = event.target.result.sort((a,b) => a.timestamp - b.timestamp);
 
-  const nomes=[...new Set(data.map(d=>d.nome))];
+    const nomes = [...new Set(allLogs.map(item => item.nome))].sort();
+    const select = document.getElementById("filterSelect");
 
-  filterSelect.innerHTML=nomes.map(n=>`<option>${n}</option>`);
+    select.innerHTML = nomes.length
+      ? nomes.map(nome => `<option value="${nome}">${nome}</option>`).join("")
+      : `<option value="">Sem registros</option>`;
 
-  updateChartData();
- };
+    if(preferredExercise && nomes.includes(preferredExercise)){
+      select.value = preferredExercise;
+    }
+
+    updateStats(nomes);
+    updateHistory();
+    updateChartData();
+  };
 }
 
-// CHART UPDATE
+function updateStats(nomes){
+  document.getElementById("statLogs").textContent = allLogs.length;
+  document.getElementById("statExercises").textContent = nomes.length;
+
+  const best = allLogs.reduce((max,item) => {
+    return Math.max(max, item.peso || 0);
+  }, 0);
+
+  document.getElementById("statBest").textContent = best + " kg";
+}
+
 function updateChartData(){
- if(!db || !chart) return;
+  if(!chart) return;
 
- const filter=filterSelect.value;
+  const filter = document.getElementById("filterSelect").value;
+  const data = allLogs.filter(item => item.nome === filter);
 
- const store=db.transaction("logs").objectStore("logs");
+  chart.data.labels = data.map(item => {
+    return new Date(item.timestamp).toLocaleDateString("pt-BR");
+  });
 
- store.getAll().onsuccess=e=>{
-  const data=e.target.result.filter(d=>d.nome===filter);
-
-  chart.data.labels=data.map(d=>new Date(d.timestamp).toLocaleDateString());
-  chart.data.datasets[0].data=data.map(d=>d.peso);
-  chart.data.datasets[0].label=filter || "Carga";
+  chart.data.datasets[0].data = data.map(item => item.peso);
+  chart.data.datasets[0].label = filter || "Carga";
 
   chart.update();
- };
 }
 
-// EXPORT
-function exportData(){
- const store=db.transaction("logs").objectStore("logs");
+function updateHistory(){
+  const history = document.getElementById("history");
+  const recent = [...allLogs].sort((a,b) => b.timestamp - a.timestamp);
 
- store.getAll().onsuccess=e=>{
-  const blob=new Blob([JSON.stringify(e.target.result,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-
-  const a=document.createElement("a");
-  a.href=url;
-  a.download="backup.json";
-  a.click();
- };
-}
-
-// IMPORT (🔥 NOVO)
-function importData(file){
- if(!file || !db) return;
-
- const reader=new FileReader();
-
- reader.onload=function(e){
-  try{
-   const data=JSON.parse(e.target.result);
-
-   const tx=db.transaction("logs","readwrite");
-   const store=tx.objectStore("logs");
-
-   data.forEach(item=>{
-    // evita duplicar pelo timestamp
-    store.add(item);
-   });
-
-   tx.oncomplete=()=>{
-    alert("Backup importado com sucesso!");
-    refresh();
-   };
-
-  }catch(err){
-   alert("Arquivo inválido");
+  if(!recent.length){
+    history.innerHTML = `<p>Nenhum treino registrado ainda.</p>`;
+    return;
   }
- };
 
- reader.readAsText(file);
+  history.innerHTML = recent.map(item => `
+    <div class="log">
+      <div>
+        <div class="log-title">${item.nome}</div>
+        <div class="log-meta">
+          ${item.peso} kg x ${item.reps} reps -
+          ${new Date(item.timestamp).toLocaleString("pt-BR")}
+        </div>
+      </div>
+      <button class="btn-danger" onclick="removeLog(${item.id})">Excluir</button>
+    </div>
+  `).join("");
 }
 
+function removeLog(id){
+  const tx = db.transaction("logs", "readwrite");
+
+  tx.objectStore("logs").delete(id);
+
+  tx.oncomplete = function(){
+    notify("Registro excluído.");
+    refresh();
+  };
+}
+
+function exportData(){
+  const blob = new Blob([JSON.stringify(allLogs, null, 2)], {
+    type: "application/json"
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "aura-fit-backup.json";
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+function importData(file){
+  if(!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = function(event){
+    try{
+      const imported = JSON.parse(event.target.result);
+
+      if(!Array.isArray(imported)){
+        throw new Error("Formato inválido");
+      }
+
+      const existingKeys = new Set(
+        allLogs.map(item => `${item.nome}|${item.peso}|${item.reps}|${item.timestamp}`)
+      );
+
+      const cleanItems = imported.filter(item => {
+        if(!item.nome || isNaN(Number(item.peso)) || isNaN(Number(item.reps))){
+          return false;
+        }
+
+        const key = `${item.nome}|${item.peso}|${item.reps}|${item.timestamp}`;
+
+        if(existingKeys.has(key)){
+          return false;
+        }
+
+        existingKeys.add(key);
+        return true;
+      });
+
+      if(!cleanItems.length){
+        notify("Nenhum registro novo encontrado.");
+        return;
+      }
+
+      const tx = db.transaction("logs", "readwrite");
+      const store = tx.objectStore("logs");
+
+      cleanItems.forEach(item => {
+        store.add({
+          nome: item.nome,
+          peso: Number(item.peso),
+          reps: Number(item.reps),
+          timestamp: Number(item.timestamp) || Date.now()
+        });
+      });
+
+      tx.oncomplete = function(){
+        notify(cleanItems.length + " registros importados.");
+        refresh();
+      };
+
+    }catch(error){
+      notify("Arquivo inválido.");
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+function clearAll(){
+  if(!allLogs.length){
+    notify("Nada para limpar.");
+    return;
+  }
+
+  if(!confirm("Apagar todos os registros salvos neste navegador?")){
+    return;
+  }
+
+  const tx = db.transaction("logs", "readwrite");
+
+  tx.objectStore("logs").clear();
+
+  tx.oncomplete = function(){
+    notify("Histórico apagado.");
+    refresh();
+  };
+}
+
+function notify(message){
+  const toast = document.getElementById("toast");
+
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2200);
+}
 </script>
 </body>
 </html>
